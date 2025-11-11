@@ -1,0 +1,1 @@
+ALTER TABLE "registros" ADD COLUMN "identificacion" varchar(150) NOT NULL;
