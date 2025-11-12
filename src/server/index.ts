@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +35,9 @@ const HEADER_IMAGE_PATH = resolve(
   "Cabecera.PNG"
 );
 let cachedHeaderBuffer: Buffer | null = null;
+
+const DIST_PATH = resolve(__dirname, "..", "..", "dist");
+const DIST_INDEX_HTML_PATH = resolve(DIST_PATH, "index.html");
 
 async function getWatermarkBuffer() {
   if (cachedWatermarkBuffer) {
@@ -689,6 +693,22 @@ app.delete("/api/registros/:id", async (req, res) => {
       .json({ message: "Error interno al eliminar el registro." });
   }
 });
+
+if (existsSync(DIST_INDEX_HTML_PATH)) {
+  app.use(express.static(DIST_PATH));
+
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path.startsWith("/api/")) {
+      return next();
+    }
+
+    res.sendFile(DIST_INDEX_HTML_PATH);
+  });
+} else {
+  console.warn(
+    `No se encontró el frontend compilado en ${DIST_INDEX_HTML_PATH}. Ejecuta "npm run build" antes de iniciar el servidor en producción.`
+  );
+}
 
 app.listen(PORT, () => {
   console.log(`Servidor listo en http://localhost:${PORT}`);
