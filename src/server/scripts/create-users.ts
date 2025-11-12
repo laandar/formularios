@@ -10,26 +10,30 @@ import { users } from "../db/schema";
  * Script para crear múltiples usuarios con la misma clave temporal
  * 
  * Uso:
- * 1. Crea un archivo emails.txt con formato: correo,nombre (uno por línea)
+ * 1. Crea un archivo emails.txt con formato: correo,nombre,unidad (uno por línea)
  *    Ejemplo:
- *    usuario1@ejemplo.com,Juan Pérez
- *    usuario2@ejemplo.com,Maria García
- *    usuario3@ejemplo.com  (si no especificas nombre, se genera automáticamente)
+ *    usuario1@ejemplo.com,Juan Pérez,Unidad Operativa
+ *    usuario2@ejemplo.com,Maria García,Unidad de Planificación
+ *    usuario3@ejemplo.com,,Unidad Administrativa  (si no especificas nombre, se genera automáticamente)
+ *    usuario4@ejemplo.com  (si no especificas nombre ni unidad, se generarán automáticamente)
  * 
  * 2. Ejecuta: npm run create-users
  * 
  * O configura las variables de entorno:
  * - TEMP_PASSWORD: la clave temporal a usar (por defecto: "TempPass123!")
  * - EMAILS_FILE: ruta al archivo con correos (por defecto: "./emails.txt")
+ * - DEFAULT_UNIDAD: unidad por defecto si no se especifica (por defecto: vacío)
  */
 
 const TEMP_PASSWORD = process.env.TEMP_PASSWORD ?? "TempPass123!";
 const EMAILS_FILE = process.env.EMAILS_FILE ?? resolve(process.cwd(), "emails.txt");
 const OUTPUT_FILE = process.env.OUTPUT_FILE ?? resolve(process.cwd(), "usuarios-creados.csv");
+const DEFAULT_UNIDAD = process.env.DEFAULT_UNIDAD ?? "";
 
 interface UserData {
   email: string;
   name: string;
+  unidad?: string;
 }
 
 async function readUsersFromFile(filePath: string): Promise<UserData[]> {
@@ -61,7 +65,12 @@ async function readUsersFromFile(filePath: string): Promise<UserData[]> {
           ? parts[1] 
           : generateUserName(email);
 
-        users.push({ email, name });
+        // Si hay tercera parte, es la unidad; si no, se usará la unidad por defecto
+        const unidad = parts.length > 2 && parts[2].length > 0
+          ? parts[2]
+          : DEFAULT_UNIDAD || undefined;
+
+        users.push({ email, name, unidad });
       });
 
     if (users.length === 0) {
@@ -159,11 +168,12 @@ async function main() {
     email: user.email,
     passwordHash,
     name: user.name,
+    unidad: user.unidad || null,
   }));
 
   // Insertar usuarios en lotes para mejor rendimiento
   const BATCH_SIZE = 50;
-  const results: Array<{ email: string; name: string; password: string }> = [];
+  const results: Array<{ email: string; name: string; unidad?: string; password: string }> = [];
 
   for (let i = 0; i < usersToInsert.length; i += BATCH_SIZE) {
     const batch = usersToInsert.slice(i, i + BATCH_SIZE);
@@ -181,6 +191,7 @@ async function main() {
         results.push({
           email: user.email,
           name: user.name,
+          unidad: user.unidad || undefined,
           password: TEMP_PASSWORD,
         });
       });
@@ -196,9 +207,9 @@ async function main() {
   // Generar archivo CSV con las credenciales
   console.log("");
   console.log("📄 Generando archivo CSV con credenciales...");
-  const csvHeader = "Email,Nombre,Contraseña Temporal\n";
+  const csvHeader = "Email,Nombre,Unidad,Contraseña Temporal\n";
   const csvRows = results
-    .map((r) => `"${r.email}","${r.name}","${r.password}"`)
+    .map((r) => `"${r.email}","${r.name}","${r.unidad || ""}","${r.password}"`)
     .join("\n");
   const csvContent = csvHeader + csvRows;
 

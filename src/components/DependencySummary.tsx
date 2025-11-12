@@ -10,6 +10,7 @@ type AuthUser = {
   id: number;
   email: string;
   name: string;
+  unidad: string | null;
 };
 
 type DependencySummaryProps = {

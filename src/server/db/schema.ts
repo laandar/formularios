@@ -14,6 +14,7 @@ export const users = pgTable(
     email: varchar("email", { length: 255 }).notNull(),
     passwordHash: text("password_hash").notNull(),
     name: varchar("name", { length: 150 }).notNull(),
+    unidad: varchar("unidad", { length: 255 }),
     createdAt: timestamp("created_at", { withTimezone: false })
       .notNull()
       .defaultNow(),

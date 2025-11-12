@@ -16,6 +16,7 @@ type EditableTableProps = {
     id: number;
     email: string;
     name: string;
+    unidad: string | null;
   };
 };
 

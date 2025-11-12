@@ -14,7 +14,7 @@ import { z } from "zod";
 import * as QRCode from "qrcode";
 
 import { db } from "./db/client";
-import { registros } from "./db/schema";
+import { registros, users } from "./db/schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -134,14 +134,21 @@ app.post("/api/login", async (req, res) => {
 
     const sessionToken = randomUUID();
 
+  
+
+    const userResponse = {
+      id: foundUser.id,
+      email: foundUser.email,
+      name: foundUser.name,
+      unidad: foundUser.unidad ?? null,
+    };
+
+    
+
     return res.json({
       message: "Inicio de sesión exitoso",
       token: sessionToken,
-      user: {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-      },
+      user: userResponse,
     });
   } catch (error) {
     console.error("Error interno durante el login:", error);
@@ -362,6 +369,10 @@ app.get("/api/registros/pdf", async (req, res) => {
       .where(eq(registros.usuario, rawUsuario))
       .orderBy(registros.dependencia, desc(registros.creadoEn));
 
+    const usuarioInfo = await db.query.users.findFirst({
+      where: (table, { eq }) => eq(table.email, rawUsuario),
+    });
+
     const [watermarkBuffer, headerBuffer] = await Promise.all([
       getWatermarkBuffer(),
       getHeaderBuffer(),
@@ -458,16 +469,16 @@ app.get("/api/registros/pdf", async (req, res) => {
       .fontSize(12)
       .fillColor("#1f2937")
       .text(`Usuario: ${rawUsuario}`, { width: bodyWidth });
-    doc.text(
-      `Generado: ${generatedAt.toLocaleString("es-EC", {
-        dateStyle: "full",
-        timeStyle: "medium",
-      })}`,
-      { width: bodyWidth }
-    );
-    doc.text(`Código de verificación: ${verificationCode}`, {
-      width: bodyWidth,
-    });
+    if (usuarioInfo) {
+      if (usuarioInfo.name) {
+        doc.text(`Nombre: ${usuarioInfo.name}`, { width: bodyWidth });
+      }
+      if (usuarioInfo.unidad) {
+        doc.text(`Unidad: ${usuarioInfo.unidad}`, { width: bodyWidth });
+      }
+    }
+    
+    
     doc.moveDown(1.2);
     doc.moveDown(1);
 

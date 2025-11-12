@@ -8,6 +8,7 @@ type AuthUser = {
   id: number;
   email: string;
   name: string;
+  unidad: string | null;
 };
 
 type AuthSession = {
@@ -91,6 +92,7 @@ function App() {
         throw new Error("La respuesta del servidor es incompleta.");
       }
 
+
       setSession({ token, user });
       setPassword("");
       setActiveView("form");
@@ -115,7 +117,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>Iniciar sesión</h1>
+      {!session && <h1>Iniciar sesión</h1>}
 
       {session ? (
         <>
@@ -123,6 +125,7 @@ function App() {
             <div className="session-header">
               <div>
                 <p className="session-title">Hola, {session.user.name}</p>
+                <p className="session-title">Dependencia: {session.user.unidad?.trim() || "No especificada"}</p>
                 <p className="session-email">{session.user.email}</p>
               </div>
               <button

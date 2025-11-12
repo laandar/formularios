@@ -4,7 +4,7 @@ export const MOTIVO_OPTIONS = [
   "Descanso Domiciliario",
   "Imputables a vacaciones",
   "Maternidad o Parto",
-  "PATERNIDAD",
+  "Paternidad",
   "Licencias sin remuneración",
   "Liceacias con remuneración",
   "Por calamidad doméstica",

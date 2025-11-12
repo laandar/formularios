@@ -7,6 +7,7 @@ import { users } from "./schema";
 const DEFAULT_EMAIL = process.env.SEED_USER_EMAIL ?? "admin@example.com";
 const DEFAULT_PASSWORD = process.env.SEED_USER_PASSWORD ?? "changeme";
 const DEFAULT_NAME = process.env.SEED_USER_NAME ?? "Administrador";
+const DEFAULT_UNIDAD = process.env.SEED_USER_UNIDAD;
 
 async function main() {
   const existing = await db.query.users.findFirst({
@@ -26,6 +27,7 @@ async function main() {
     email: DEFAULT_EMAIL,
     passwordHash,
     name: DEFAULT_NAME,
+    unidad: DEFAULT_UNIDAD || null,
   });
 
   console.log(
