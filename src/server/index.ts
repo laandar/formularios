@@ -14,7 +14,7 @@ import { z } from "zod";
 import * as QRCode from "qrcode";
 
 import { db } from "./db/client";
-import { registros, users } from "./db/schema";
+import { registros } from "./db/schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
