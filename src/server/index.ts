@@ -86,7 +86,7 @@ app.get("/api/health", (_req, res) => {
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(5),
 });
 
 const registrosSchema = z.object({
@@ -298,7 +298,24 @@ app.get("/api/registros", async (req, res) => {
   }
 });
 
-app.get("/api/registros/por-dependencia", async (_req, res) => {
+const AUTHORIZED_EMAIL = "deinplaneamiento@gmail.com";
+
+app.get("/api/registros/por-dependencia", async (req, res) => {
+  // Verificar que el usuario esté autorizado
+  const userEmail = req.headers["x-user-email"];
+  
+  if (!userEmail || typeof userEmail !== "string") {
+    return res.status(401).json({
+      message: "No se proporcionó información de usuario.",
+    });
+  }
+
+  if (userEmail.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+    return res.status(403).json({
+      message: "No tienes permisos para acceder a este recurso.",
+    });
+  }
+
   try {
     const resultados = await db
       .select({

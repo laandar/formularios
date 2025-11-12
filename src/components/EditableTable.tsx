@@ -55,6 +55,7 @@ const GRADE_OPTIONS = [
   "GRAD",
   "GRAI",
   "GRAS",
+  "POLI",
   "CBOS",
   "CBOP",
   "SGOS",

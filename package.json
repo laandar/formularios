@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:seed": "tsx src/server/db/seed.ts"
+    "db:seed": "tsx src/server/db/seed.ts",
+    "create-users": "tsx src/server/scripts/create-users.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

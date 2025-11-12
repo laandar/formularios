@@ -1,0 +1,9 @@
+usuario1@ejemplo.com,Juan Pérez
+usuario2@ejemplo.com,Maria García
+usuario3@ejemplo.com,Carlos López
+juan.perez@ejemplo.com,Juan Pérez
+maria.garcia@ejemplo.com,Maria García
+darwin.sinche@gmail.com,DNATH
+darwin.sinche@gmail.com,DNATH
+deinplaneamiento@gmail.com,DNATH
+

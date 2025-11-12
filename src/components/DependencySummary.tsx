@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { DEPENDENCIA_OPTIONS } from "../constants/dependencies";
 
 export type DependencySummaryItem = {
@@ -6,17 +6,40 @@ export type DependencySummaryItem = {
   total: number;
 };
 
-export function DependencySummary() {
+type AuthUser = {
+  id: number;
+  email: string;
+  name: string;
+};
+
+type DependencySummaryProps = {
+  currentUser: AuthUser;
+};
+
+// Función para normalizar texto eliminando tildes y convirtiendo a mayúsculas
+const normalizeText = (text: string): string => {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+};
+
+export function DependencySummary({ currentUser }: DependencySummaryProps) {
   const [items, setItems] = useState<DependencySummaryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/registros/por-dependencia");
+      const response = await fetch("/api/registros/por-dependencia", {
+        headers: {
+          "X-User-Email": currentUser.email,
+        },
+      });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
         throw new Error(
@@ -90,16 +113,26 @@ export function DependencySummary() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser.email]);
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [loadData]);
 
   const totalRegistros = useMemo(
     () => items.reduce((acc, item) => acc + Number(item.total ?? 0), 0),
     [items]
   );
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return items;
+    }
+    const normalizedSearch = normalizeText(searchTerm.trim());
+    return items.filter((item) =>
+      normalizeText(item.dependencia).includes(normalizedSearch)
+    );
+  }, [items, searchTerm]);
 
   return (
     <div className="summary-container">
@@ -134,36 +167,59 @@ export function DependencySummary() {
           </button>
         </div>
       ) : (
-        <div className="summary-table-wrapper">
-          {isLoading ? (
-            <div className="summary-loader">Cargando resumen...</div>
-          ) : items.length === 0 ? (
-            <p className="summary-empty">
-              No hay registros para mostrar.
-            </p>
-          ) : (
-            <table className="summary-table">
-              <thead>
-                <tr>
-                  <th>Dependencia</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((item) => (
-                  <tr key={item.dependencia}>
-                    <td>{item.dependencia}</td>
-                    <td className="summary-total">
-                      {Number(item.total ?? 0).toLocaleString("es-EC", {
-                        maximumFractionDigits: 0,
-                      })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          {!isLoading && items.length > 0 && (
+            <div className="summary-search">
+              <input
+                type="text"
+                placeholder="Buscar dependencia..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="summary-search-input"
+              />
+            </div>
           )}
-        </div>
+          <div className="summary-table-wrapper">
+            {isLoading ? (
+              <div className="summary-loader">Cargando resumen...</div>
+            ) : items.length === 0 ? (
+              <p className="summary-empty">
+                No hay registros para mostrar.
+              </p>
+            ) : filteredItems.length === 0 ? (
+              <p className="summary-empty">
+                No se encontraron dependencias que coincidan con la búsqueda.
+              </p>
+            ) : (
+              <table className="summary-table">
+                <thead>
+                  <tr>
+                    <th>Dependencia</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.map((item) => {
+                    const hasZeroRecords = Number(item.total ?? 0) === 0;
+                    return (
+                      <tr
+                        key={item.dependencia}
+                        className={hasZeroRecords ? "summary-row-zero" : ""}
+                      >
+                        <td>{item.dependencia}</td>
+                        <td className="summary-total">
+                          {Number(item.total ?? 0).toLocaleString("es-EC", {
+                            maximumFractionDigits: 0,
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

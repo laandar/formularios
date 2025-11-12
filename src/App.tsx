@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import "./App.css";
 import { EditableTable } from "./components/EditableTable";
@@ -15,6 +15,8 @@ type AuthSession = {
   user: AuthUser;
 };
 
+const AUTHORIZED_EMAIL = "deinplaneamiento@gmail.com";
+
 function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,6 +24,15 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [activeView, setActiveView] = useState<"form" | "summary">("form");
+
+  // Redirigir a "form" si el usuario no está autorizado y está en "summary"
+  useEffect(() => {
+    if (session && activeView === "summary") {
+      if (session.user.email.toLowerCase() !== AUTHORIZED_EMAIL.toLowerCase()) {
+        setActiveView("form");
+      }
+    }
+  }, [session, activeView]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -132,21 +143,23 @@ function App() {
               >
                 Captura de novedades
               </button>
-              <button
-                type="button"
-                className={`tab-button ${
-                  activeView === "summary" ? "active" : ""
-                }`}
-                onClick={() => setActiveView("summary")}
-              >
-                Resumen por dependencia
-              </button>
+              {session.user.email.toLowerCase() === AUTHORIZED_EMAIL.toLowerCase() && (
+                <button
+                  type="button"
+                  className={`tab-button ${
+                    activeView === "summary" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveView("summary")}
+                >
+                  Resumen por dependencia
+                </button>
+              )}
             </div>
           </div>
           {activeView === "form" ? (
             <EditableTable currentUser={session.user} />
           ) : (
-            <DependencySummary />
+            <DependencySummary currentUser={session.user} />
           )}
         </>
       ) : (
@@ -171,7 +184,7 @@ function App() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
-              minLength={6}
+              minLength={5}
               required
             />
           </label>
@@ -184,12 +197,7 @@ function App() {
         </form>
       )}
 
-      {!session && (
-        <p className="helper-text">
-          Usa las credenciales de la semilla:{" "}
-          <strong>admin@example.com / changeme</strong>
-        </p>
-      )}
+      
     </div>
   );
 }

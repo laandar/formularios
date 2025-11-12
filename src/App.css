@@ -457,6 +457,31 @@ button:disabled {
   color: #64748b;
 }
 
+.summary-search {
+  margin-bottom: 0.75rem;
+}
+
+.summary-search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-search-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.summary-search-input::placeholder {
+  color: #94a3b8;
+}
+
 .summary-table-wrapper {
   overflow: auto;
   border-radius: 12px;
@@ -484,6 +509,25 @@ button:disabled {
 
 .summary-table tbody tr:hover {
   background: rgba(37, 99, 235, 0.08);
+}
+
+.summary-table tbody tr.summary-row-zero {
+  background: rgba(251, 191, 36, 0.15);
+  border-left: 3px solid #f59e0b;
+}
+
+.summary-table tbody tr.summary-row-zero:hover {
+  background: rgba(251, 191, 36, 0.25);
+}
+
+.summary-table tbody tr.summary-row-zero td {
+  color: #92400e;
+  font-weight: 500;
+}
+
+.summary-table tbody tr.summary-row-zero .summary-total {
+  color: #b45309;
+  font-weight: 700;
 }
 
 .summary-total {
@@ -520,4 +564,459 @@ button:disabled {
 
 .summary-error button {
   align-self: flex-end;
+}
+
+/* ========================================
+   MEDIA QUERIES - RESPONSIVE DESIGN
+   ======================================== */
+
+/* Tablet y pantallas medianas (hasta 1024px) */
+@media (max-width: 1024px) {
+  #root {
+    max-width: 100%;
+    padding: 2rem 1.25rem;
+  }
+
+  .app-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .sheet-table {
+    min-width: 680px;
+  }
+}
+
+/* Tablets (hasta 768px) */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  #root {
+    padding: 1.5rem 1rem;
+  }
+
+  .app-container {
+    padding: 1.5rem 1.25rem;
+    border-radius: 12px;
+  }
+
+  .app-container h1 {
+    font-size: 1.75rem;
+  }
+
+  .session-card {
+    padding: 1.25rem;
+  }
+
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .session-header button {
+    width: 100%;
+    padding: 0.85rem 1.2rem;
+  }
+
+  .session-title {
+    font-size: 1.2rem;
+  }
+
+  .session-tabs {
+    width: 100%;
+  }
+
+  .tab-button {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .sheet-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .sheet-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .sheet-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .sheet-actions button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sheet-table-wrapper {
+    border-radius: 10px;
+  }
+
+  .sheet-table {
+    min-width: 640px;
+    font-size: 0.9rem;
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    padding: 0.7rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .summary-container {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .summary-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .summary-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .summary-header button {
+    width: 100%;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 0.75rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .searchable-select__list {
+    min-width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
+}
+
+/* Móviles pequeños y medianos (hasta 640px) */
+@media (max-width: 640px) {
+  body {
+    padding: 0.75rem;
+    align-items: stretch;
+  }
+
+  #root {
+    padding: 1rem 0.75rem;
+    width: 100%;
+  }
+
+  .app-container {
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+  }
+
+  .app-container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-form {
+    gap: 1rem;
+  }
+
+  input {
+    padding: 0.7rem 0.9rem;
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+
+  button {
+    padding: 0.85rem 1.1rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Botones principales en formularios */
+  .login-form button,
+  .session-header button,
+  .summary-header button,
+  .sheet-actions button,
+  .summary-error button {
+    width: 100%;
+  }
+
+  .session-card {
+    padding: 1rem;
+    gap: 0.875rem;
+  }
+
+  .session-header {
+    gap: 0.875rem;
+  }
+
+  .session-title {
+    font-size: 1.1rem;
+  }
+
+  .session-email {
+    font-size: 0.9rem;
+    word-break: break-word;
+  }
+
+  .session-tabs {
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+  }
+
+  .tab-button {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .sheet-container {
+    margin-top: 1rem;
+    gap: 0.875rem;
+  }
+
+  .sheet-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .sheet-actions {
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .sheet-actions button {
+    width: 100%;
+  }
+
+  .sheet-table {
+    min-width: 600px;
+    font-size: 0.85rem;
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .sheet-table input {
+    padding: 0.3rem 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  .sheet-table th:last-child,
+  .sheet-table td:last-child {
+    width: 5.5rem;
+  }
+
+  .summary-container {
+    padding: 1.25rem 1rem;
+    gap: 1rem;
+  }
+
+  .summary-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .summary-header p {
+    font-size: 0.9rem;
+  }
+
+  .summary-search-input {
+    padding: 0.7rem 0.9rem;
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+
+  .summary-table {
+    font-size: 0.85rem;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .summary-table tbody tr.summary-row-zero {
+    border-left-width: 2px;
+  }
+
+  .searchable-select input {
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+
+  .searchable-select__list {
+    min-width: calc(100vw - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
+    max-height: 14rem;
+    font-size: 0.9rem;
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    width: auto !important;
+  }
+
+  .searchable-select__option {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .sheet-feedback {
+    font-size: 0.9rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .sheet-helper {
+    font-size: 0.85rem;
+  }
+
+  .error-message {
+    font-size: 0.9rem;
+    padding: 0.7rem 0.9rem;
+  }
+}
+
+/* Móviles muy pequeños (hasta 480px) */
+@media (max-width: 480px) {
+  body {
+    padding: 0.5rem;
+  }
+
+  #root {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .app-container {
+    padding: 1rem 0.75rem;
+    gap: 1rem;
+  }
+
+  .app-container h1 {
+    font-size: 1.35rem;
+  }
+
+  .session-card {
+    padding: 0.875rem;
+  }
+
+  .session-title {
+    font-size: 1rem;
+  }
+
+  .session-email {
+    font-size: 0.85rem;
+  }
+
+  .tab-button {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.85rem;
+  }
+
+  .sheet-header h2 {
+    font-size: 1rem;
+  }
+
+  .sheet-table {
+    min-width: 550px;
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    padding: 0.55rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .sheet-table input {
+    padding: 0.25rem 0.3rem;
+    font-size: 0.8rem;
+  }
+
+  .summary-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .summary-header h2 {
+    font-size: 1.05rem;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 0.6rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .summary-error {
+    padding: 1rem;
+  }
+
+  .summary-error button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .searchable-select__list {
+    min-width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    width: auto !important;
+    max-height: 12rem;
+    font-size: 0.85rem;
+  }
+
+  .searchable-select__option {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Orientación landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 0.5rem;
+  }
+
+  #root {
+    padding: 1rem 0.75rem;
+  }
+
+  .app-container {
+    padding: 1.25rem 1rem;
+  }
+
+  .app-container h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Mejoras de accesibilidad y toque */
+@media (max-width: 768px) {
+  button,
+  .tab-button,
+  .searchable-select__option {
+    min-height: 44px; /* Tamaño mínimo recomendado para toques */
+  }
+
+  input,
+  .summary-search-input {
+    min-height: 44px;
+  }
+
+  .sheet-table tbody tr {
+    min-height: 44px;
+  }
+}
+
+/* Ajustes para pantallas muy anchas */
+@media (min-width: 1400px) {
+  #root {
+    max-width: 1200px;
+  }
 }
