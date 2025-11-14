@@ -403,6 +403,17 @@ export function EditableTable({ currentUser }: EditableTableProps) {
         return;
       }
 
+      if (cacheEntry.status === "not-found") {
+        if (row.grado.trim().length > 0 || row.nombresCompletos.trim().length > 0) {
+          rowsToUpdate[row.id] = {
+            documento: normalizedIdentificacion,
+            grado: "",
+            nombresCompletos: "",
+          };
+        }
+        return;
+      }
+
       if (cacheEntry.status === "found") {
         const needsGrado =
           row.grado.trim().length === 0 && GRADE_SET.has(cacheEntry.data.grado);
@@ -555,6 +566,15 @@ export function EditableTable({ currentUser }: EditableTableProps) {
           return {
             ...row,
             grado: finalValue,
+          };
+        }
+
+        if (key === "identificacion") {
+          return {
+            ...row,
+            identificacion: value,
+            grado: "",
+            nombresCompletos: "",
           };
         }
 
