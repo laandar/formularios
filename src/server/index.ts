@@ -14,7 +14,7 @@ import { z } from "zod";
 import * as QRCode from "qrcode";
 
 import { db } from "./db/client";
-import { registros } from "./db/schema";
+import { personal, registros } from "./db/schema";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -103,6 +103,43 @@ const registrosSchema = z.object({
       })
     )
     .min(1),
+});
+
+app.get("/api/personal/:identificacion", async (req, res) => {
+  const rawIdentificacion = (req.params.identificacion ?? "").trim();
+
+  if (rawIdentificacion.length === 0) {
+    return res
+      .status(400)
+      .json({ message: "Debes proporcionar la identificación." });
+  }
+
+  const normalizedIdentificacion = rawIdentificacion.toUpperCase();
+
+  try {
+    const [record] = await db
+      .select({
+        documento: personal.documento,
+        siglas: personal.siglas,
+        nombresApellidos: personal.nombresApellidos,
+      })
+      .from(personal)
+      .where(sql`upper(${personal.documento}) = ${normalizedIdentificacion}`)
+      .limit(1);
+
+    if (!record) {
+      return res.status(404).json({
+        message: "No se encontró información para la identificación indicada.",
+      });
+    }
+
+    return res.json(record);
+  } catch (error) {
+    console.error("Error al buscar datos del personal:", error);
+    return res.status(500).json({
+      message: "Error interno al buscar los datos del personal.",
+    });
+  }
 });
 
 app.post("/api/login", async (req, res) => {

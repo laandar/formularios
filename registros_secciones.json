@@ -1,0 +1,28 @@
+[
+  {
+    "ord": 1,
+    "denominacion": "DPTO. DE ASEGURAMIENTO DE LA CALIDAD",
+    "nomenclatura": "NAP-DNED-ITSPN-ASGC-"
+  },
+  {
+    "ord": 2,
+    "denominacion": "SECC. PROCESAMIENTO DE LA INFORMACIÓN",
+    "nomenclatura": "NAP-DNED-ITSPN-VIAC-CAC-PRIN-"
+  },
+  {
+    "ord": 3,
+    "denominacion": "SECC. ACONDICIONAMIENTO FÍSICO APLICADO A LA DEFENSA PERSONAL POLICIAL",
+    "nomenclatura": "NAP-DNED-ITSPN-VIAC-CAC-DEFP-"
+  },
+  {
+    "ord": 4,
+    "denominacion": "SECC. INVESTIGACIÓN DE CIBERDELITOS",
+    "nomenclatura": "NAP-DNED-ITSPN-VIAC-CAC-ICIB-"
+  },
+  {
+    "ord": 5,
+    "denominacion": "SECC. INVESTIGACIÓN DE DELITOS ECONÓMICOS Y FINANCIEROS",
+    "nomenclatura": "NAP-DNED-ITSPN-VIAC-CAC-ECFI-"
+  }
+]
+

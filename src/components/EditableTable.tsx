@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ClipboardEvent } from "react";
 import {
   DEPENDENCIA_OPTIONS,
@@ -46,6 +46,17 @@ type TableRow = {
   detalle: string;
 };
 
+type PersonalLookupData = {
+  documento: string;
+  grado: string;
+  nombresCompletos: string;
+};
+
+type PersonalLookupEntry =
+  | { status: "pending" }
+  | { status: "not-found" }
+  | { status: "found"; data: PersonalLookupData };
+
 const GRADE_OPTIONS = [
   "SBTE",
   "TNTE",
@@ -69,6 +80,7 @@ const GRADE_OPTIONS = [
 const GRADE_SET = new Set<string>(GRADE_OPTIONS);
 
 const normalizeIdentificacion = (value: string) => value.trim().toUpperCase();
+const MIN_LOOKUP_LENGTH = 9;
 
 type DuplicateMessage = {
   message: string;
@@ -171,7 +183,7 @@ const columns: ColumnConfig[] = [
     key: "nombresCompletos",
     label: "Nombres completos",
     placeholder: "Nombre y apellidos",
-    width: "18rem",
+    width: "50rem",
   },
   {
     key: "dependencia",
@@ -222,10 +234,16 @@ export function EditableTable({ currentUser }: EditableTableProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<number[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, ColumnKey[]>>({});
+  const [personalCache, setPersonalCache] = useState<Record<string, PersonalLookupEntry>>({});
+  const personalCacheRef = useRef(personalCache);
   const duplicateMessages = useMemo(
     () => buildDuplicateMessages(rows),
     [rows]
   );
+
+  useEffect(() => {
+    personalCacheRef.current = personalCache;
+  }, [personalCache]);
 
   const fetchExistingRows = useCallback(async () => {
     const usuario = currentUser.email.trim();
@@ -293,6 +311,157 @@ export function EditableTable({ currentUser }: EditableTableProps) {
   useEffect(() => {
     void fetchExistingRows();
   }, [fetchExistingRows]);
+
+  const requestPersonalData = useCallback(
+    async (normalizedIdentificacion: string, options?: { force?: boolean }) => {
+      const forceLookup = options?.force ?? false;
+      const existingEntry = personalCacheRef.current[normalizedIdentificacion];
+
+      if (existingEntry && !forceLookup) {
+        return;
+      }
+
+      setPersonalCache((current) => ({
+        ...current,
+        [normalizedIdentificacion]: { status: "pending" },
+      }));
+
+    try {
+      const requestUrl = `/api/personal/${encodeURIComponent(
+        normalizedIdentificacion
+      )}`;
+      const response = await fetch(requestUrl);
+
+      if (response.status === 404) {
+        setPersonalCache((current) => ({
+          ...current,
+          [normalizedIdentificacion]: { status: "not-found" },
+        }));
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as {
+        documento: string;
+        siglas: string;
+        nombresApellidos: string;
+      };
+
+      setPersonalCache((current) => ({
+        ...current,
+        [normalizedIdentificacion]: {
+          status: "found",
+          data: {
+            documento: payload.documento.trim().toUpperCase(),
+            grado: payload.siglas.trim().toUpperCase(),
+            nombresCompletos: payload.nombresApellidos.trim(),
+          },
+        },
+      }));
+    } catch (error) {
+      console.error("No se pudo obtener los datos del personal:", error);
+      setPersonalCache((current) => {
+        if (current[normalizedIdentificacion]?.status !== "pending") {
+          return current;
+        }
+        const { [normalizedIdentificacion]: _pending, ...rest } = current;
+        return rest;
+      });
+    }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (rows.length === 0) {
+      return;
+    }
+
+    const rowsToUpdate: Record<string, PersonalLookupData> = {};
+
+    rows.forEach((row) => {
+      if (row.persistedId !== undefined) {
+        return;
+      }
+
+      const normalizedIdentificacion = normalizeIdentificacion(row.identificacion);
+      if (!normalizedIdentificacion || normalizedIdentificacion.length < MIN_LOOKUP_LENGTH) {
+        return;
+      }
+
+      const cacheEntry = personalCache[normalizedIdentificacion];
+
+      if (!cacheEntry) {
+        void requestPersonalData(normalizedIdentificacion);
+        return;
+      }
+
+      if (cacheEntry.status === "pending") {
+        return;
+      }
+
+      if (cacheEntry.status === "found") {
+        const needsGrado =
+          row.grado.trim().length === 0 && GRADE_SET.has(cacheEntry.data.grado);
+        const needsNombre =
+          row.nombresCompletos.trim().length === 0 &&
+          cacheEntry.data.nombresCompletos.length > 0;
+
+        if (needsGrado || needsNombre) {
+          rowsToUpdate[row.id] = cacheEntry.data;
+        }
+      }
+    });
+
+    const pendingRowIds = Object.keys(rowsToUpdate);
+    if (pendingRowIds.length === 0) {
+      return;
+    }
+
+    setRows((currentRows) => {
+      let hasChanges = false;
+      const updatedRows = currentRows.map((row) => {
+        if (row.persistedId !== undefined) {
+          return row;
+        }
+
+        const lookupData = rowsToUpdate[row.id];
+        if (!lookupData) {
+          return row;
+        }
+
+        const normalizedIdentificacion = normalizeIdentificacion(row.identificacion);
+        if (!normalizedIdentificacion || normalizedIdentificacion !== lookupData.documento) {
+          return row;
+        }
+
+        const shouldUpdateGrado =
+          row.grado.trim().length === 0 && GRADE_SET.has(lookupData.grado);
+        const shouldUpdateNombre =
+          row.nombresCompletos.trim().length === 0 &&
+          lookupData.nombresCompletos.length > 0;
+
+        if (!shouldUpdateGrado && !shouldUpdateNombre) {
+          return row;
+        }
+
+        hasChanges = true;
+
+        return {
+          ...row,
+          grado: shouldUpdateGrado ? lookupData.grado : row.grado,
+          nombresCompletos: shouldUpdateNombre
+            ? lookupData.nombresCompletos
+            : row.nombresCompletos,
+        };
+      });
+
+      return hasChanges ? updatedRows : currentRows;
+    });
+  }, [rows, personalCache, requestPersonalData]);
 
   useEffect(() => {
     setValidationErrors((currentErrors) => {
@@ -865,6 +1034,16 @@ export function EditableTable({ currentUser }: EditableTableProps) {
         </div>
       </div>
 
+      {saveMessage && (
+        <p
+          className={`sheet-feedback ${
+            saveStatus === "success" ? "success" : "error"
+          }`}
+        >
+          {saveMessage}
+        </p>
+      )}
+
       <div className="sheet-table-wrapper" role="region" aria-live="polite">
         {isLoading ? (
           <div className="sheet-loader">Cargando registros...</div>
@@ -900,9 +1079,13 @@ export function EditableTable({ currentUser }: EditableTableProps) {
                       const isCellInvalid = missingColumns.includes(column.key);
                       const isDuplicateCell =
                         column.key === "identificacion" && hasDuplicate;
+                      const isGradeColumn = column.key === "grado";
+                      const isNamesColumn = column.key === "nombresCompletos";
+                      const isReadOnlyColumn = isGradeColumn || isNamesColumn;
                       const fieldClasses = [
                         isPersisted ? "persisted-input" : "",
                         isCellInvalid || isDuplicateCell ? "invalid-field" : "",
+                        isNamesColumn ? "nombres-field" : "",
                       ]
                         .filter(Boolean)
                         .join(" ") || undefined;
@@ -936,6 +1119,8 @@ export function EditableTable({ currentUser }: EditableTableProps) {
                                   : column.key === "dependencia"
                                   ? "Selecciona una dependencia"
                                   : "Selecciona un motivo";
+                              const isSelectDisabled =
+                                isPersisted || column.key === "grado";
 
                               return (
                                 <SearchableSelect
@@ -946,30 +1131,53 @@ export function EditableTable({ currentUser }: EditableTableProps) {
                                     handleCellChange(row.id, column.key, nextValue)
                                   }
                                   ariaLabel={`${column.label} fila ${index + 1}`}
-                                  disabled={isPersisted}
+                                  disabled={isSelectDisabled}
                                   inputClassName={fieldClasses}
                                 />
                               );
                             })()
                           ) : (
-                            <input
-                              type="text"
-                              value={row[column.key]}
-                              placeholder={column.placeholder}
-                              onChange={(event) =>
-                                handleCellChange(
-                                  row.id,
-                                  column.key,
-                                  event.target.value
-                                )
+                            (() => {
+                              if (column.key === "nombresCompletos") {
+                                return (
+                                  <textarea
+                                    value={row.nombresCompletos}
+                                    placeholder={column.placeholder}
+                                    readOnly
+                                    rows={2}
+                                    aria-label={`${column.label} fila ${index + 1}`}
+                                    className={`nombres-textarea ${fieldClasses ?? ""}`.trim()}
+                                  />
+                                );
                               }
-                              aria-label={`${column.label} fila ${index + 1}`}
-                              onPaste={(event) =>
-                                handleCellPaste(event, row.id, column.key)
+
+                              const inputElement = (
+                                <input
+                                  type="text"
+                                  value={row[column.key]}
+                                  placeholder={column.placeholder}
+                                  onChange={(event) =>
+                                    handleCellChange(
+                                      row.id,
+                                      column.key,
+                                      event.target.value
+                                    )
+                                  }
+                                  aria-label={`${column.label} fila ${index + 1}`}
+                                  onPaste={(event) =>
+                                    handleCellPaste(event, row.id, column.key)
+                                  }
+                                  readOnly={isPersisted || isReadOnlyColumn}
+                                  className={fieldClasses}
+                                />
+                              );
+
+                              if (column.key !== "identificacion") {
+                                return inputElement;
                               }
-                              readOnly={isPersisted}
-                              className={fieldClasses}
-                            />
+
+                              return inputElement;
+                            })()
                           )}
                           {column.key === "identificacion" && duplicateInfo && (
                             <small className="cell-feedback error">
@@ -1015,15 +1223,6 @@ export function EditableTable({ currentUser }: EditableTableProps) {
       {loadError && (
         <p className="sheet-feedback error">
           No se pudieron cargar los registros existentes: {loadError}
-        </p>
-      )}
-      {saveMessage && (
-        <p
-          className={`sheet-feedback ${
-            saveStatus === "success" ? "success" : "error"
-          }`}
-        >
-          {saveMessage}
         </p>
       )}
     </div>

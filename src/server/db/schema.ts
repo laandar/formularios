@@ -38,8 +38,15 @@ export const registros = pgTable("registros", {
     .defaultNow(),
 });
 
+export const personal = pgTable("personal", {
+  documento: varchar("documento", { length: 150 }).primaryKey(),
+  siglas: varchar("siglas", { length: 50 }).notNull(),
+  nombresApellidos: varchar("nombres_apellidos", { length: 255 }).notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Registro = typeof registros.$inferSelect;
 export type NuevoRegistro = typeof registros.$inferInsert;
+export type Personal = typeof personal.$inferSelect;
 
