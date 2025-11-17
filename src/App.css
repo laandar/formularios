@@ -70,6 +70,9 @@ button {
   color: #ffffff;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 button:hover:not(:disabled) {
@@ -178,6 +181,13 @@ button:disabled {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+}
+
+.sheet-actions button {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  flex-shrink: 1;
 }
 
 .primary {
@@ -672,8 +682,10 @@ button:disabled {
   }
 
   .sheet-actions button {
-    flex: 1;
-    min-width: 0;
+    flex: 1 0 auto;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .sheet-table-wrapper {
@@ -814,6 +826,9 @@ button:disabled {
 
   .sheet-actions button {
     width: 100%;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .sheet-table {

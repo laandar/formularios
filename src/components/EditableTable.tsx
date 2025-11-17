@@ -241,6 +241,11 @@ export function EditableTable({ currentUser }: EditableTableProps) {
     [rows]
   );
 
+  // Variables de entorno para deshabilitar funcionalidades
+  const disableSaveAll = import.meta.env.VITE_DISABLE_SAVE_ALL === "true";
+  const disableAddRow = import.meta.env.VITE_DISABLE_ADD_ROW === "true";
+  const disableDelete = import.meta.env.VITE_DISABLE_DELETE === "true";
+
   useEffect(() => {
     personalCacheRef.current = personalCache;
   }, [personalCache]);
@@ -1040,14 +1045,14 @@ export function EditableTable({ currentUser }: EditableTableProps) {
           <button type="button" className="secondary" onClick={handleDownloadPdf}>
             Descargar PDF
           </button>
-          <button type="button" onClick={handleAddRow}>
+          <button type="button" onClick={handleAddRow} disabled={disableAddRow}>
             Añadir fila
           </button>
           <button
             type="button"
             className="primary"
             onClick={handleSaveAll}
-            disabled={isSaving || sanitizedRows.length === 0}
+            disabled={disableSaveAll || isSaving || sanitizedRows.length === 0}
           >
             {isSaving ? "Guardando..." : "Guardar todo"}
           </button>
@@ -1217,9 +1222,10 @@ export function EditableTable({ currentUser }: EditableTableProps) {
                             : handleRemoveRow(row.id)
                         }
                         disabled={
-                          isPersisted
+                          disableDelete ||
+                          (isPersisted
                             ? isDeleting
-                            : rows.length === 1
+                            : rows.length === 1)
                         }
                         aria-label={`Eliminar fila ${index + 1}`}
                       >
